@@ -34,8 +34,8 @@ namespace Viscons.ShellHandler
         /// </summary>
         static readonly List<IconEntry> IconEntries = new List<IconEntry> {
             new IconEntry { name = "white32px", size = 32, contentBounds = new Rectangle(7, 10, 19, 19), textFont = new Font(fontName, 4.0f) },
-            new IconEntry { name = "white48px", size = 48, contentBounds = new Rectangle(9, 14, 31, 31), textFont = new Font(fontName, 32.0f) },
-            new IconEntry { name = "white256px", size = 256, contentBounds = new Rectangle(46, 77, 164, 157), textFont = new Font(fontName, 32.0f) },
+            new IconEntry { name = "white48px", size = 48, contentBounds = new Rectangle(9, 14, 31, 31), textFont = new Font(fontName, 6.0f) },
+            new IconEntry { name = "white256px", size = 256, contentBounds = new Rectangle(46, 77, 164, 157), textFont = new Font(fontName, 16.0f) },
         };
 
         private static IconEntry GetIconEntry(uint size)
@@ -101,28 +101,18 @@ namespace Viscons.ShellHandler
         /// <param name="fileStream">The stream to load the text content from</param>
         /// <param name="size">The size of the icon to create (eg. 32x32)</param>
         /// <returns>An Icon containing a single size RGBA image</returns>
-        public static Icon CreateAsciiFileIcon(string label, Stream fileStream, uint size)
+        public static Icon CreateAsciiFileIcon(string label, IEnumerable<string> previewLines, uint size)
         {
             IconEntry iconEntry = GetIconEntry(size);
             Bitmap bitmap = LoadBitmapResource(iconEntry.name);
 
-            // Read up to ten lines of text
-            var previewLines = new List<string>();
-            using (var reader = new StreamReader(fileStream))
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    var line = reader.ReadLine();
-                    if (line == null)
-                        break;
-                    previewLines.Add(line);
-                }
-            }
-
             // Draw text overlay
-            using (var graphics = Graphics.FromImage(bitmap))
+            if (previewLines.Count() > 0)
             {
-                RenderTextOverlay(graphics, previewLines, iconEntry.contentBounds);
+                using (var graphics = Graphics.FromImage(bitmap))
+                {
+                    RenderTextOverlay(graphics, previewLines, iconEntry.contentBounds, iconEntry.textFont);
+                }
             }
 
             return BitmapToIcon(bitmap);
@@ -142,9 +132,8 @@ namespace Viscons.ShellHandler
         /// <summary>
         /// Render dynamic text content onto a graphics canvas
         /// </summary>
-        private static void RenderTextOverlay(Graphics graphics, IEnumerable<string> previewLines, Rectangle contentBounds)
+        private static void RenderTextOverlay(Graphics graphics, IEnumerable<string> previewLines, Rectangle contentBounds, Font font)
         {
-            var font = new Font("Consolas", 4.0f);
             var brush = new SolidBrush(Color.Black);
 
             graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
@@ -155,7 +144,7 @@ namespace Viscons.ShellHandler
             foreach (var line in previewLines)
             {
                 graphics.DrawString(line, font, brush, contentBounds.Left, y);
-                y += 5.0f;
+                y += font.Size;
             }
         }
     }
