@@ -7,8 +7,8 @@
     <ProjectGuid>{F5871D45-69F4-4DEF-9510-4C110A527CD1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>shellhandler</RootNamespace>
-    <AssemblyName>shellhandler</AssemblyName>
+    <RootNamespace>Viscons.ShellHandler</RootNamespace>
+    <AssemblyName>Viscons.ShellHandler</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -51,13 +53,47 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DllIconHandler.cs" />
+    <Compile Include="IconLib\AuthorAttribute.cs" />
+    <Compile Include="IconLib\BitmapEncoders\BMPEncoder.cs" />
+    <Compile Include="IconLib\BitmapEncoders\ImageEncoder.cs" />
+    <Compile Include="IconLib\BitmapEncoders\PNGEncoder.cs" />
+    <Compile Include="IconLib\ColorProcessing\EuclideanQuantizer.cs" />
+    <Compile Include="IconLib\ColorProcessing\FloydSteinbergDithering.cs" />
+    <Compile Include="IconLib\ColorProcessing\IColorQuantizer.cs" />
+    <Compile Include="IconLib\ColorProcessing\IDithering.cs" />
+    <Compile Include="IconLib\ColorProcessing\IPaletteQuantizer.cs" />
+    <Compile Include="IconLib\ColorProcessing\OctreeQuantizer.cs" />
+    <Compile Include="IconLib\Enums.cs" />
+    <Compile Include="IconLib\Exceptions\IconNameAlreadyExistException.cs" />
+    <Compile Include="IconLib\Exceptions\ImageAlreadyExistsException.cs" />
+    <Compile Include="IconLib\Exceptions\ImageTooBigException.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidFileException.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidICLFileException.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidIconFormatSelectionException.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidIconSelectionException.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidMultiIconFileException.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidMultiIconMaskBitmap.cs" />
+    <Compile Include="IconLib\Exceptions\InvalidPixelFormatException.cs" />
+    <Compile Include="IconLib\IconImage.cs" />
+    <Compile Include="IconLib\LibraryFormats\IconFormat.cs" />
+    <Compile Include="IconLib\LibraryFormats\ILibraryFormat.cs" />
+    <Compile Include="IconLib\LibraryFormats\PEFormat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IconLib\Structs.cs" />
+    <Compile Include="IconLib\Tools.cs" />
+    <Compile Include="IconLib\Win32.cs" />
+    <Compile Include="IconRenderer.cs" />
+    <Compile Include="IconLib\MultiIcon.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="IconLib\SingleIcon.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="TextIconHandler.cs" />
+    <Compile Include="UnknownIconHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -66,17 +102,31 @@
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\ascii.ico" />
     <None Include="Resources\dll-managed.ico" />
     <None Include="Resources\dll-native.ico" />
     <None Include="Resources\unknown.ico" />
     <None Include="Resources\blank.ico" />
-    <Content Include="Resources\DLL_Managed.ico" />
-    <Content Include="Resources\DLL_Native.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EmptyDll.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\template\white16px.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\template\white32px.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\template\white48px.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\template\white256px.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

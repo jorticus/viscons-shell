@@ -11,8 +11,11 @@ using System.Drawing.Text;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace shellhandler
+namespace Viscons.ShellHandler
 {
+    /// <summary>
+    /// Provides dynamic text icons for ASCII files (text and code)
+    /// </summary>
     [ComVisible(true)]
     [COMServerAssociation(AssociationType.FileExtension, ".txt")]
     class TextIconHandler : SharpIconHandler
@@ -22,46 +25,41 @@ namespace shellhandler
 
         public TextIconHandler()
         {
-            thumbnailFont = new Lazy<Font>(() => new Font("Courier New", 12f));
+            thumbnailFont = new Lazy<Font>(() => new Font("Consolas", 4f));
             thumbnailTextBrush = new Lazy<Brush>(() => new SolidBrush(Color.Black));
         }
 
-        protected override Icon GetIcon(bool smallIcon, uint iconSize)
+        protected Icon RenderIcon(bool smallIcon, uint iconSize)
         {
+            if (smallIcon)
+                return null;
+
             //  Attempt to open the stream with a reader.
             try
             {
-                using (var reader = new StreamReader(this.SelectedItemPath))
+                using (var stream = new FileStream(this.SelectedItemPath, FileMode.Open))
                 {
-                    //  Read up to ten lines of text.
-                    var previewLines = new List<string>();
-                    for (int i = 0; i < 10; i++)
-                    {
-                        var line = reader.ReadLine();
-                        if (line == null)
-                            break;
-                        previewLines.Add(line);
-                    }
-
-                    //  Now return a preview of the lines.
-                    var img = CreateThumbnailForText(previewLines, iconSize);
-
-                    Icon icon = Icon.FromHandle(img.GetHicon());
-                    return icon;
-                    //return GetIconSpecificSize(icon, new Size((int)iconSize, (int)iconSize));
+                    return IconRenderer.CreateAsciiFileIcon("TXT", stream, iconSize);
+                    //return Icon.FromHandle(bitmap.GetHicon());
                 }
             }
             catch (Exception exception)
             {
                 //  Log the exception and return null for failure.
                 LogError("An exception occured opening the text file.", exception);
-                return GetIconSpecificSize(Properties.Resources.blank, new Size((int)iconSize, (int)iconSize));
+                return null;
             }
         }
-        /*protected override System.Drawing.Bitmap GetThumbnailImage(uint width)
-        {
 
-        }*/
+        protected override Icon GetIcon(bool smallIcon, uint iconSize)
+        {
+            Icon icon = RenderIcon(smallIcon, iconSize);
+            
+            if (icon == null)
+                icon = Properties.Resources.ascii;
+
+            return GetIconSpecificSize(icon, new Size((int)iconSize, (int)iconSize));
+        }
 
         /// <summary>
         /// Creates the thumbnail for text, using the provided preview lines.
@@ -71,42 +69,6 @@ namespace shellhandler
         /// <returns>
         /// A thumbnail for the text.
         /// </returns>
-        private Bitmap CreateThumbnailForText(IEnumerable<string> previewLines, uint width)
-        {
-            //  Create the bitmap dimensions.
-            var thumbnailSize = new Size((int)width, (int)width);
-
-            //  Create the bitmap.
-            var bitmap = new Bitmap(thumbnailSize.Width, thumbnailSize.Height, PixelFormat.Format32bppArgb);
-
-            //  Create a graphics object to render to the bitmap.
-            using (var graphics = Graphics.FromImage(bitmap))
-            {
-                //  Set the rendering up for anti-aliasing.
-                graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-
-                //  Draw the page background.
-                graphics.DrawImage(Properties.Resources.blank.ToBitmap(), 0, 0, thumbnailSize.Width, thumbnailSize.Height);
-
-                //  Create offsets for the text.
-                var xOffset = width * 0.2f;
-                var yOffset = width * 0.3f;
-                var yLimit = width - yOffset;
-
-                graphics.Clip = new Region(new RectangleF(xOffset, yOffset, thumbnailSize.Width - (xOffset * 2), thumbnailSize.Height - width * .1f));
-
-                //  Render each line of text.
-                foreach (var line in previewLines)
-                {
-                    graphics.DrawString(line, thumbnailFont.Value, thumbnailTextBrush.Value, xOffset, yOffset);
-                    yOffset += 14f;
-                    if (yOffset + 14f > yLimit)
-                        break;
-                }
-            }
-
-            //  Return the bitmap.
-            return bitmap;
-        }
+        
     }
 }

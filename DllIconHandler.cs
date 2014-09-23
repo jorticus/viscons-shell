@@ -8,8 +8,11 @@ using SharpShell.Attributes;
 
 //http://sharpshell.codeplex.com/documentation
 
-namespace shellhandler
+namespace Viscons.ShellHandler
 {
+    /// <summary>
+    /// Provides separate icons for Native and Managed (.NET) DLLs
+    /// </summary>
     [ComVisible(true)]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".dll")]
     class DllIconHandler : SharpIconHandler
