@@ -20,13 +20,9 @@ namespace Viscons.ShellHandler
     [COMServerAssociation(AssociationType.ClassOfExtension, ".txt")]
     class TextIconHandler : SharpIconHandler
     {
-        private readonly Lazy<Font> thumbnailFont;
-        private readonly Lazy<Brush> thumbnailTextBrush;
-
         public TextIconHandler()
         {
-            thumbnailFont = new Lazy<Font>(() => new Font("Consolas", 4f));
-            thumbnailTextBrush = new Lazy<Brush>(() => new SolidBrush(Color.Black));
+
         }
 
         protected Icon DefaultIcon(uint iconSize)
@@ -38,7 +34,7 @@ namespace Viscons.ShellHandler
         {
             Log(String.Format("RenderIcon(size: {0}, file: {1})", iconSize, Path.GetFileName(this.SelectedItemPath)));
 
-            if (smallIcon)
+            if (iconSize < 32 || smallIcon)
             {
                 Log("Ignoring small icon");
                 return DefaultIcon(iconSize);

@@ -81,22 +81,22 @@ namespace Viscons.ShellHandler.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static System.Drawing.Icon dll_managed {
+        internal static byte[] dll_managed {
             get {
                 object obj = ResourceManager.GetObject("dll_managed", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
+                return ((byte[])(obj));
             }
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static System.Drawing.Icon dll_native {
+        internal static byte[] dll_native {
             get {
                 object obj = ResourceManager.GetObject("dll_native", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
+                return ((byte[])(obj));
             }
         }
         
