@@ -6,8 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Viscons.ShellHandler;
 
-namespace Viscons.ShellHandler
+namespace Viscons.IconRenderer
 {
     public static class IconUtils
     {
@@ -61,7 +62,7 @@ namespace Viscons.ShellHandler
         /// </summary>
         public static Bitmap LoadIconResource(string name, Size size)
         {
-            Icon icon = (Icon)Properties.Resources.ResourceManager.GetObject(name);
+            Icon icon = (Icon)Viscons.ShellHandler.Properties.Resources.ResourceManager.GetObject(name);
             return new Icon(icon, size).ToBitmap();
         }
 
@@ -70,7 +71,7 @@ namespace Viscons.ShellHandler
         /// </summary>
         public static Bitmap LoadBitmapResource(string name)
         {
-            return (Bitmap)Properties.Resources.ResourceManager.GetObject(name);
+            return (Bitmap)Viscons.ShellHandler.Properties.Resources.ResourceManager.GetObject(name);
         }
     }
 }

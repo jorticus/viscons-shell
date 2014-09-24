@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Drawing.Imaging;
 using System.IO;
+using Viscons.IconRenderer;
 
 namespace Viscons.ShellHandler
 {
@@ -85,7 +86,8 @@ namespace Viscons.ShellHandler
             if (config.HasValue)
             {
                 TextIconRenderer renderer = new TextIconRenderer(config.Value);
-                return renderer.Render(label, previewLines);
+                Bitmap bitmap = renderer.Render(label, previewLines);
+                return IconUtils.BitmapToIcon(bitmap);
             }
   
             return null;

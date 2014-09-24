@@ -7,6 +7,7 @@ using SharpShell.SharpIconHandler;
 using SharpShell.Attributes;
 using System.Drawing.IconLib;
 using System.IO;
+using Viscons.IconRenderer;
 
 //http://sharpshell.codeplex.com/documentation
 

@@ -12,7 +12,7 @@ using System.Drawing.IconLib;
 using System.Collections;
 using System.Drawing.Drawing2D;
 
-namespace Viscons.ShellHandler
+namespace Viscons.IconRenderer
 {
     /// <summary>
     /// Preset theme colours
@@ -36,6 +36,9 @@ namespace Viscons.ShellHandler
         public PointF LabelPos;
         public Color LabelStrokeColor;
         public Color LabelOutlineColor;
+        public PixelOffsetMode LabelPixelOffsetMode;
+        public SmoothingMode LabelSmoothingMode;
+        public float LabelStrokeWidth;
 
         public Region ClipRegion;
 
@@ -51,14 +54,50 @@ namespace Viscons.ShellHandler
     static public class IconThemeConfigs {
         // Static configuration for dynamically constructed icons
         static public readonly Dictionary<uint, IconConfig> WhiteThemeConfigs = new Dictionary<uint, IconConfig> {
+            {16, new IconConfig { 
+                IconName = "white16px", 
+                IconSize = 16,
+
+                LabelFont = new Font("Pixel Millennium", 8.0f),
+                LabelPos = new PointF(0.5f, 0.5f),
+                LabelStrokeColor = ThemeColors.Accent,
+                LabelOutlineColor = ThemeColors.Background,
+                LabelPixelOffsetMode = PixelOffsetMode.None,
+                LabelSmoothingMode = SmoothingMode.None,
+                LabelStrokeWidth = 2.0f,
+
+                ClipRegion = new Region(new GraphicsPath(new Point[] {
+                    new Point(3, 1), 
+                    new Point(10, 1),
+                    new Point(10, 5),
+                    new Point(12, 5),
+                    new Point(12, 15),
+                    new Point(3, 15),
+                }, new byte[] { 
+                    (byte)PathPointType.Start,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                })),
+
+                ContentPos = new PointF(3.5f, 5f),
+                ContentFont = new Font("Pixel Millennium", 2.0f),
+                ContentColor = ThemeColors.Accent,
+            }},    
+        
             {32, new IconConfig { 
                 IconName = "white32px", 
                 IconSize = 32,
 
-                LabelFont = new Font("ProFontWindows", 11.0f),
+                LabelFont = new Font("ProFontWindows", 12.0f),
                 LabelPos = new PointF(7f, 1f),
                 LabelStrokeColor = ThemeColors.Accent,
                 LabelOutlineColor = ThemeColors.Background,
+                LabelPixelOffsetMode = PixelOffsetMode.HighQuality,
+                LabelSmoothingMode = SmoothingMode.None,
+                LabelStrokeWidth = 2.0f,
 
                 ClipRegion = new Region(new GraphicsPath(new Point[] {
                     new Point(7, 3), 
@@ -76,20 +115,76 @@ namespace Viscons.ShellHandler
                     (byte)PathPointType.Line,
                 })),
 
-                ContentPos = new PointF(6f, 11f),
-                ContentFont = new Font("Consolas", 4.0f),
+                ContentPos = new PointF(6.0f, 10.5f),
+                ContentFont = new Font("Consolas", 3.0f),
                 ContentColor = Color.Black,
             }},
-            /*{48, new TextIconRenderer { 
-                IconFilename = "white48px", 
+
+            {48, new IconConfig { 
+                IconName = "white48px", 
                 IconSize = 48,
-                TextFont = new Font("Consolas", 6.0f),
+
+                LabelFont = new Font("ProFontWindows", 12.0f),
+                LabelPos = new PointF(9f, 2f),
+                LabelStrokeColor = ThemeColors.Accent,
+                LabelOutlineColor = ThemeColors.Background,
+                LabelPixelOffsetMode = PixelOffsetMode.HighQuality,
+                LabelSmoothingMode = SmoothingMode.None,
+                LabelStrokeWidth = 2.0f,
+
+                ClipRegion = new Region(new GraphicsPath(new Point[] {
+                    new Point(9, 3), 
+                    new Point(29, 3),
+                    new Point(29, 15),
+                    new Point(40, 15),
+                    new Point(40, 45),
+                    new Point(9, 45),
+                }, new byte[] { 
+                    (byte)PathPointType.Start,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                })),
+
+                ContentPos = new PointF(6.0f, 11.0f),
+                ContentFont = new Font("Consolas", 4.0f),
+                ContentColor = Color.Black,
+            }}, 
+
+            {256, new IconConfig { 
+                IconName = "white256px", 
+                IconSize = 256,
+
+                LabelFont = new Font("ProFontWindows", 72.0f),
+                LabelPos = new PointF(50f, 16f),
+                LabelStrokeColor = ThemeColors.Accent,
+                LabelOutlineColor = ThemeColors.Background,
+                LabelPixelOffsetMode = PixelOffsetMode.HighQuality,
+                LabelSmoothingMode = SmoothingMode.AntiAlias,
+                LabelStrokeWidth = 10.0f,
+
+                ClipRegion = new Region(new GraphicsPath(new Point[] {
+                    new Point(47, 24), 
+                    new Point(156, 24),
+                    new Point(156, 77),
+                    new Point(209, 77),
+                    new Point(209, 233),
+                    new Point(47, 233),
+                }, new byte[] { 
+                    (byte)PathPointType.Start,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                })),
+
+                ContentPos = new PointF(48.0f, 74.0f),
+                ContentFont = new Font("ProFontWindows", 10.0f),
+                ContentColor = Color.Black,
             }},
-            {256, new TextIconRenderer { 
-                IconFilename = "white256px", 
-                IconSize = 48,
-                TextFont = new Font("Consolas", 16.0f),
-            }},*/
         };
 
         static public IconConfig? GetConfig(uint iconSize, Dictionary<uint, IconConfig> configTheme)
@@ -107,18 +202,21 @@ namespace Viscons.ShellHandler
     /// Icon renderer class, allows any kind of icon to be rendered from
     /// generic components. Subclass this to change the type of overlay that is drawn
     /// </summary>
-    public class IconRenderer
+    public class GenericIconRenderer
     {
         // The config contains parameters specific to a certain icon size
         protected IconConfig config;
         protected string label;
 
-        public IconRenderer(IconConfig config)
+        public bool DebugClipRegion { get; set; }
+
+        public GenericIconRenderer(IconConfig config)
         {
             this.config = config;
+            DebugClipRegion = false;
         }
 
-        public virtual Icon Render(string label)
+        public virtual Bitmap Render(string label)
         {
             this.label = label; // Store for later use
 
@@ -132,7 +230,8 @@ namespace Viscons.ShellHandler
             }
 
             // Compose the Icon
-            return IconUtils.BitmapToIcon(bitmap);
+            return bitmap;
+            //return IconUtils.BitmapToIcon(bitmap);
         }
 
         protected virtual void RenderOverlay(Graphics graphics)
@@ -145,29 +244,32 @@ namespace Viscons.ShellHandler
                 // Create a path from the label string using the config fon
                 StringFormat fmt = StringFormat.GenericTypographic;
                 GraphicsPath labelPath = new GraphicsPath();
-                labelPath.AddString(this.label, config.LabelFont.FontFamily, (int)FontStyle.Bold, config.LabelFont.Size, config.LabelPos, fmt);
+                labelPath.AddString(this.label, config.LabelFont.FontFamily, (int)config.LabelFont.Style, config.LabelFont.Size, config.LabelPos, fmt);
 
                 // Enable smoothing
-                graphics.SmoothingMode = SmoothingMode.None;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                graphics.SmoothingMode = config.LabelSmoothingMode;
+                graphics.PixelOffsetMode = config.LabelPixelOffsetMode;
 
                 // Draw the path with outline
-                graphics.DrawPath(new Pen(config.LabelOutlineColor, 2.0f), labelPath);
+                graphics.DrawPath(new Pen(config.LabelOutlineColor, config.LabelStrokeWidth), labelPath);
                 graphics.FillPath(new SolidBrush(config.LabelStrokeColor), labelPath);
             }
+
+            if (DebugClipRegion)
+                graphics.FillRegion(Brushes.Red, config.ClipRegion);
         }
     }
 
     /// <summary>
     /// Subclass of IconRenderer, renders dynamic text content for the overlay layer
     /// </summary>
-    public class TextIconRenderer : IconRenderer
+    public class TextIconRenderer : GenericIconRenderer
     {
-        protected List<string> content;
+        public List<string> content { get; set; }
 
         public TextIconRenderer(IconConfig config) : base(config) { }
 
-        public Icon Render(string label, List<string> content)
+        public Bitmap Render(string label, List<string> content)
         {
             // Intercept the original Render call so we can pass it the content
             this.content = content;
@@ -183,9 +285,6 @@ namespace Viscons.ShellHandler
             graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
             graphics.Clip = config.ClipRegion;
             
-            // Uncomment to show the ContentBounds (For debugging)
-            //graphics.FillRegion(Brushes.Red, config.ContentBounds);
-
             if (content != null && content.Count() > 0)
             {
                 var brush = new SolidBrush(config.ContentColor);
