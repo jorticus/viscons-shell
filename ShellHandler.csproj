@@ -85,6 +85,7 @@
     <Compile Include="IconLib\Win32.cs" />
     <Compile Include="IconRenderer.cs" />
     <Compile Include="IconLib\MultiIcon.cs" />
+    <Compile Include="IconUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IconLib\SingleIcon.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

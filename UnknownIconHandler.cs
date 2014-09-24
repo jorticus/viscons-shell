@@ -13,7 +13,7 @@ namespace Viscons.ShellHandler
     /// <summary>
     /// Provides content-aware icons for "unknown" file types
     /// </summary>
-    [ComVisible(true)]
+    /*[ComVisible(true)]
     [COMServerAssociation(AssociationType.UnknownFiles)]
     class UnknownIconHandler : SharpIconHandler
     {
@@ -27,5 +27,5 @@ namespace Viscons.ShellHandler
             //  function to extract the icon of the required size.
             return null;// GetIconSpecificSize(icon, new Size((int)iconSize, (int)iconSize));
         }
-    }
+    }*/
 }

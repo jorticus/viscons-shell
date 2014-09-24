@@ -17,7 +17,7 @@ namespace Viscons.ShellHandler
     /// Provides dynamic text icons for ASCII files (text and code)
     /// </summary>
     [ComVisible(true)]
-    [COMServerAssociation(AssociationType.ClassOfExtension, ".txt")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".txt", ".md", ".c", ".cpp", ".h")]
     class TextIconHandler : SharpIconHandler
     {
         public TextIconHandler()
@@ -25,65 +25,88 @@ namespace Viscons.ShellHandler
 
         }
 
-        protected Icon DefaultIcon(uint iconSize)
+        /// <summary>
+        /// Read the first 10 lines in the given file
+        /// Does not check for binary/ascii formats, so use with care.
+        /// </summary>
+        /// <param name="filename">The file to read from</param>
+        /// <returns>Up to 10 lines of text content</returns>
+        protected List<string> ReadFileContents(string filename)
         {
-            return GetIconSpecificSize(Properties.Resources.ascii, new Size((int)iconSize, (int)iconSize));
+            var previewLines = new List<string>();
+
+            
+            using (var stream = new FileStream(this.SelectedItemPath, FileMode.Open, FileAccess.Read))
+            {
+                // Read up to 10 lines of text
+                using (var reader = new StreamReader(stream))
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        var line = reader.ReadLine();
+                        if (line == null)
+                            break;
+                        previewLines.Add(line);
+                    }
+                }
+            }
+            return previewLines;
         }
 
-        protected override Icon GetIcon(bool smallIcon, uint iconSize)
+        /// <summary>
+        /// Renders a dynamic icon that contains the text of the current file
+        /// </summary>
+        protected Icon RenderIcon(bool smallIcon, uint iconSize)
         {
-            Log(String.Format("RenderIcon(size: {0}, file: {1})", iconSize, Path.GetFileName(this.SelectedItemPath)));
+            string name = Path.GetFileName(this.SelectedItemPath);
+            string label = Path.GetExtension(this.SelectedItemPath).Substring(1).ToUpperInvariant();
 
-            if (iconSize < 32 || smallIcon)
-            {
-                Log("Ignoring small icon");
-                return DefaultIcon(iconSize);
-            }
+            /*if (iconSize < 32 || smallIcon)
+                return DefaultIcon(iconSize);*/
 
-            var previewLines = new List<string>();
+            List<string> previewLines = null;
 
             //  Attempt to open the stream with a reader.
             try
             {
-                Log(String.Format("Opening text file {0}", this.SelectedItemPath));
-                using (var stream = new FileStream(this.SelectedItemPath, FileMode.Open, FileAccess.Read))
-                {
-                    // Read up to ten lines of text
-                    using (var reader = new StreamReader(stream))
-                    {
-                        for (int i = 0; i < 10; i++)
-                        {
-                            var line = reader.ReadLine();
-                            if (line == null)
-                                break;
-                            previewLines.Add(line);
-                        }
-                    }
-                }
+                Log(String.Format("{0}: Opening text file {1}", name, this.SelectedItemPath));
+                previewLines = ReadFileContents(this.SelectedItemPath);
             }
             catch (Exception exception)
             {
-                //  Log the exception and return null for failure.
-                LogError("An exception occured opening the text file.", exception);
-                return DefaultIcon(iconSize);
+                LogError(String.Format("{0}: An exception occured opening the text file.", name), exception);
+                //return null;
             }
 
-            Log(String.Format("Rendering Icon (size: {0})", iconSize));
-            Icon icon = IconRenderer.CreateAsciiFileIcon("TXT", previewLines, iconSize);
 
-            Log(String.Format("Icon done (size: {0})", iconSize));
-            return icon;
+            Log(String.Format("{0}: Rendering Icon", name));
 
+            IconConfig? config = IconThemeConfigs.GetConfig(iconSize, IconThemeConfigs.WhiteThemeConfigs);
+            if (config.HasValue)
+            {
+                TextIconRenderer renderer = new TextIconRenderer(config.Value);
+                return renderer.Render(label, previewLines);
+            }
+  
+            return null;
         }
 
         /// <summary>
-        /// Creates the thumbnail for text, using the provided preview lines.
+        /// Retrieve the correct icon for the current file (SharpShell)
         /// </summary>
-        /// <param name="previewLines">The preview lines.</param>
-        /// <param name="width">The width.</param>
-        /// <returns>
-        /// A thumbnail for the text.
-        /// </returns>
+        /// <returns>An icon containing a single format of the correct size</returns>
+        protected override Icon GetIcon(bool smallIcon, uint iconSize)
+        {
+            Icon icon = RenderIcon(smallIcon, iconSize);
+
+            if (icon == null)
+            {
+                return IconUtils.GetIconSpecificSize(Properties.Resources.ascii, new Size((int)iconSize, (int)iconSize));
+            }
+
+            return icon;
+
+        }
         
     }
 }

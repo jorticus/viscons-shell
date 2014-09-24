@@ -10,142 +10,199 @@ using System.Threading.Tasks;
 using SharpShell.SharpIconHandler;
 using System.Drawing.IconLib;
 using System.Collections;
+using System.Drawing.Drawing2D;
 
 namespace Viscons.ShellHandler
 {
+    /// <summary>
+    /// Preset theme colours
+    /// </summary>
+    static public class ThemeColors {
+        static public Color Accent = Color.FromArgb(0x99, 0xAC, 0xF3);
+        static public Color Background = Color.White;
+        static public Color Foreground = Color.Black;
+    }
 
-
-    public static class IconRenderer
+    /// <summary>
+    /// Internal struct used for configuring various parameters
+    /// used in rendering the icons
+    /// </summary>
+    public struct IconConfig
     {
-        private const string fontName = "Consolas";
+        public uint IconSize;
+        public string IconName;
+        
+        public Font LabelFont;
+        public PointF LabelPos;
+        public Color LabelStrokeColor;
+        public Color LabelOutlineColor;
 
-        private struct IconEntry
-        {
-            public string name;
-            public uint size;
-            public Rectangle contentBounds;
-            public Font textFont;
-        }
+        public Region ClipRegion;
 
-        /// <summary>
-        /// This defines a preset list of icon templates used for creating dynamic icons.
-        /// The contentBounds defines a region where text can be written to,
-        /// any text that lies outside these bounds is clipped.
-        /// </summary>
-        static readonly List<IconEntry> IconEntries = new List<IconEntry> {
-            new IconEntry { name = "white32px", size = 32, contentBounds = new Rectangle(7, 10, 19, 19), textFont = new Font(fontName, 4.0f) },
-            new IconEntry { name = "white48px", size = 48, contentBounds = new Rectangle(9, 14, 31, 31), textFont = new Font(fontName, 6.0f) },
-            new IconEntry { name = "white256px", size = 256, contentBounds = new Rectangle(46, 77, 164, 157), textFont = new Font(fontName, 16.0f) },
+        // TextIconRenderer-specific configs
+        public PointF ContentPos;
+        public Font ContentFont;
+        public Color ContentColor;
+    }
+
+    /// <summary>
+    /// Static class containing various icon theme configs
+    /// </summary>
+    static public class IconThemeConfigs {
+        // Static configuration for dynamically constructed icons
+        static public readonly Dictionary<uint, IconConfig> WhiteThemeConfigs = new Dictionary<uint, IconConfig> {
+            {32, new IconConfig { 
+                IconName = "white32px", 
+                IconSize = 32,
+
+                LabelFont = new Font("ProFontWindows", 11.0f),
+                LabelPos = new PointF(7f, 1f),
+                LabelStrokeColor = ThemeColors.Accent,
+                LabelOutlineColor = ThemeColors.Background,
+
+                ClipRegion = new Region(new GraphicsPath(new Point[] {
+                    new Point(7, 3), 
+                    new Point(19, 3),
+                    new Point(19, 10),
+                    new Point(26, 10),
+                    new Point(26, 29),
+                    new Point(7, 29),
+                }, new byte[] { 
+                    (byte)PathPointType.Start,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                    (byte)PathPointType.Line,
+                })),
+
+                ContentPos = new PointF(6f, 11f),
+                ContentFont = new Font("Consolas", 4.0f),
+                ContentColor = Color.Black,
+            }},
+            /*{48, new TextIconRenderer { 
+                IconFilename = "white48px", 
+                IconSize = 48,
+                TextFont = new Font("Consolas", 6.0f),
+            }},
+            {256, new TextIconRenderer { 
+                IconFilename = "white256px", 
+                IconSize = 48,
+                TextFont = new Font("Consolas", 16.0f),
+            }},*/
         };
 
-        private static IconEntry GetIconEntry(uint size)
+        static public IconConfig? GetConfig(uint iconSize, Dictionary<uint, IconConfig> configTheme)
         {
-            try
-            {
-                return IconRenderer.IconEntries.Single((item) => item.size == size);
-            }
-            catch (ArgumentNullException e)
-            {
-                throw new Exception(String.Format("Could not find icon entry for size {0}", size), innerException: e);
-            }
+            // Retrieve the config for the specified size
+            IconConfig config;
+            if (!configTheme.TryGetValue(iconSize, out config))
+                return null;
+
+            return config;
+        }
+    }
+
+    /// <summary>
+    /// Icon renderer class, allows any kind of icon to be rendered from
+    /// generic components. Subclass this to change the type of overlay that is drawn
+    /// </summary>
+    public class IconRenderer
+    {
+        // The config contains parameters specific to a certain icon size
+        protected IconConfig config;
+        protected string label;
+
+        public IconRenderer(IconConfig config)
+        {
+            this.config = config;
         }
 
-
-        /// <summary>
-        /// Load an IconImage from the specified resource name,
-        /// matching the given size (eg. 32x32)
-        /// </summary>
-        /*private static IconImage LoadIconResource(string name, Size size)
+        public virtual Icon Render(string label)
         {
-            // Load the icon resource
-            // Note: Icons must be stored as 'System.Byte[], mscorlib'
-            MultiIcon iconFile = new MultiIcon();
-            var resource = (byte[])Properties.Resources.ResourceManager.GetObject(name);
-            using (var stream = new MemoryStream(resource))
+            this.label = label; // Store for later use
+
+            // Load the base icon
+            Bitmap bitmap = IconUtils.LoadBitmapResource(config.IconName);
+
+            // Render the overlay (specific to the type of icon renderer)
+            using (var graphics = Graphics.FromImage(bitmap))
             {
-                iconFile.Load(stream);
+                RenderOverlay(graphics);
             }
 
-            // MultiIcon can contain multiple icons (eg. ICL/DLL files), 
-            // but in this case it will only ever contain one icon.
-            var icon = iconFile.First();
+            // Compose the Icon
+            return IconUtils.BitmapToIcon(bitmap);
+        }
 
-            // Find the correct size
-            foreach (var image in icon)
+        protected virtual void RenderOverlay(Graphics graphics)
+        {
+            // Draw overlay stuff here
+            graphics.ResetClip();
+
+            if (this.label != null && this.label != "")
             {
-                if (image.Size == size)
-                    return image;
+                // Create a path from the label string using the config fon
+                StringFormat fmt = StringFormat.GenericTypographic;
+                GraphicsPath labelPath = new GraphicsPath();
+                labelPath.AddString(this.label, config.LabelFont.FontFamily, (int)FontStyle.Bold, config.LabelFont.Size, config.LabelPos, fmt);
+
+                // Enable smoothing
+                graphics.SmoothingMode = SmoothingMode.None;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                // Draw the path with outline
+                graphics.DrawPath(new Pen(config.LabelOutlineColor, 2.0f), labelPath);
+                graphics.FillPath(new SolidBrush(config.LabelStrokeColor), labelPath);
             }
+        }
+    }
 
-            throw new Exception(String.Format(
-                "Could not find matching size ({0}) for icon '{1}'",
-                size, name));
-        }*/
+    /// <summary>
+    /// Subclass of IconRenderer, renders dynamic text content for the overlay layer
+    /// </summary>
+    public class TextIconRenderer : IconRenderer
+    {
+        protected List<string> content;
 
-        private static Bitmap LoadIconResource(string name, Size size)
+        public TextIconRenderer(IconConfig config) : base(config) { }
+
+        public Icon Render(string label, List<string> content)
         {
-            Icon icon = (Icon)Properties.Resources.ResourceManager.GetObject(name);
-            return new Icon(icon, size).ToBitmap();
+            // Intercept the original Render call so we can pass it the content
+            this.content = content;
+
+            // Render normally (will call RenderOverlay when required)
+            return base.Render(label);
         }
 
-        private static Bitmap LoadBitmapResource(string name)
+        protected override void RenderOverlay(Graphics graphics)
         {
-            return (Bitmap)Properties.Resources.ResourceManager.GetObject(name);
-        }
+            // Draw text overlay here (text is stored in this.content)
 
+            graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+            graphics.Clip = config.ClipRegion;
+            
+            // Uncomment to show the ContentBounds (For debugging)
+            //graphics.FillRegion(Brushes.Red, config.ContentBounds);
 
-        /// <summary>
-        /// Create a dynamic icon with text content loaded from a Stream
-        /// </summary>
-        /// <param name="label">The label at the top of the icon (eg. "TXT")</param>
-        /// <param name="fileStream">The stream to load the text content from</param>
-        /// <param name="size">The size of the icon to create (eg. 32x32)</param>
-        /// <returns>An Icon containing a single size RGBA image</returns>
-        public static Icon CreateAsciiFileIcon(string label, IEnumerable<string> previewLines, uint size)
-        {
-            IconEntry iconEntry = GetIconEntry(size);
-            Bitmap bitmap = LoadBitmapResource(iconEntry.name);
-
-            // Draw text overlay
-            if (previewLines.Count() > 0)
+            if (content != null && content.Count() > 0)
             {
-                using (var graphics = Graphics.FromImage(bitmap))
+                var brush = new SolidBrush(config.ContentColor);
+                var font = config.ContentFont;
+                var loc = config.ContentPos;
+
+                float y = loc.Y;
+                foreach (var line in content)
                 {
-                    RenderTextOverlay(graphics, previewLines, iconEntry.contentBounds, iconEntry.textFont);
+                    graphics.DrawString(line, font, brush, loc.X, y);
+                    y += font.Size;
                 }
             }
 
-            return BitmapToIcon(bitmap);
+            // Draw original icon overlay
+            base.RenderOverlay(graphics);
         }
 
-        /// <summary>
-        /// Convert a Bitmap to an Icon
-        /// (.NET doesn't have any built-in methods that do this properly)
-        /// </summary>
-        private static Icon BitmapToIcon(Bitmap bitmap)
-        {
-            SingleIcon si = new SingleIcon("icon");
-            si.Add(bitmap);
-            return si.Icon;
-        }
-
-        /// <summary>
-        /// Render dynamic text content onto a graphics canvas
-        /// </summary>
-        private static void RenderTextOverlay(Graphics graphics, IEnumerable<string> previewLines, Rectangle contentBounds, Font font)
-        {
-            var brush = new SolidBrush(Color.Black);
-
-            graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-
-            graphics.Clip = new Region(contentBounds);
-
-            float y = contentBounds.Top;
-            foreach (var line in previewLines)
-            {
-                graphics.DrawString(line, font, brush, contentBounds.Left, y);
-                y += font.Size;
-            }
-        }
     }
 }
