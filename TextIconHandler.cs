@@ -42,7 +42,7 @@ namespace Viscons.ShellHandler
                 // Read up to 10 lines of text
                 using (var reader = new StreamReader(stream))
                 {
-                    for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < 20; i++)
                     {
                         var line = reader.ReadLine();
                         if (line == null)
